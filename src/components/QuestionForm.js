@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-function QuestionForm(props) {
+function QuestionForm({ addQuestion }) {
   const [formData, setFormData] = useState({
     prompt: "",
     answer1: "",
@@ -19,12 +19,54 @@ function QuestionForm(props) {
 
   function handleSubmit(event) {
     event.preventDefault();
-    console.log(formData);
+
+    // Check if any field is empty
+    const isEmpty = Object.values(formData).some((value) => value === "");
+    if (isEmpty) {
+      alert("Please fill out all fields");
+      return;
+    }
+
+    console.log("Form Data:", formData); // Debug: Check form data
+
+    // Send the new question data to the backend
+    fetch("http://localhost:4000/questions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        prompt: formData.prompt,
+        answers: [
+          formData.answer1,
+          formData.answer2,
+          formData.answer3,
+          formData.answer4,
+        ],
+        correctIndex: parseInt(formData.correctIndex),
+      }),
+    })
+      .then((res) => res.json()) // Wait for the response and parse it
+      .then((newQuestion) => {
+        console.log("New Question Response:", newQuestion); // Debug: Log the new question response
+        // After successfully adding the new question, update parent state
+        addQuestion(newQuestion); // Add the new question to the list
+        // Reset the form fields
+        setFormData({
+          prompt: "",
+          answer1: "",
+          answer2: "",
+          answer3: "",
+          answer4: "",
+          correctIndex: 0,
+        });
+      })
+      .catch((error) => console.error("Error adding question:", error)); // Handle errors
   }
 
   return (
     <section>
-      <h1>New Question</h1>
+      <h1>Add New Question</h1>
       <form onSubmit={handleSubmit}>
         <label>
           Prompt:
